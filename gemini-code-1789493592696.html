@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MasterChef Gramatical: ¡El Pastel del Sustantivo!</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #fce4ec;
+      color: #4a148c;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .game-card {
+      background: white;
+      padding: 25px;
+      border-radius: 25px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      max-width: 800px;
+      width: 100%;
+      border: 4px solid #f48fb1;
+    }
+    h1 {
+      text-align: center;
+      color: #ad1457;
+      margin: 0 0 10px 0;
+    }
+    .score-board {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: bold;
+      background: #f8bbd0;
+      padding: 8px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+    
+    .main-stage {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* --- ÁREA DEL PASTEL EN 2D/3D (ESTILO ILUSTRACIÓN) --- */
+    .bakery-zone {
+      width: 260px;
+      height: 320px;
+      background: #fff8e1;
+      border: 3px dashed #ffe082;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .cake-container {
+      position: relative;
+      width: 200px;
+      height: 220px;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+    }
+
+    /* Plato */
+    .plate-base {
+      width: 220px;
+      height: 20px;
+      background: #e0e0e0;
+      border: 3.5px solid #2d2d2d;
+      border-radius: 50%;
+      position: absolute;
+      bottom: 0;
+    }
+
+    /* Base del bizcocho */
+    .cake-body {
+      width: 180px;
+      height: 0;
+      background-color: #f5d6a7; /* Color bizcocho vainilla por defecto */
+      border: 0px solid #2d2d2d;
+      border-radius: 0 0 45px 45px;
+      position: absolute;
+      bottom: 10px;
+      transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      overflow: hidden;
+    }
+
+    /* Cobertura derretida estilo gota */
+    .cake-drip {
+      width: 100%;
+      height: 45px;
+      position: absolute;
+      top: 0;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    /* Tapa Superior (Efecto 3D Elipse) */
+    .cake-top {
+      width: 180px;
+      height: 50px;
+      border: 3.5px solid #2d2d2d;
+      border-radius: 50%;
+      position: absolute;
+      top: 35px;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      box-sizing: border-box;
+    }
+
+    /* Fresa decorativa arriba */
+    .strawberry-topping {
+      position: absolute;
+      top: 5px;
+      left: 60px;
+      width: 45px;
+      height: 45px;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* --- ÁREA DE PREGUNTAS Y BOTONES --- */
+    .question-zone {
+      flex: 1;
+    }
+    .station-title {
+      font-size: 1rem;
+      color: #880e4f;
+      border-bottom: 2px dashed #f48fb1;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .question {
+      font-size: 1rem;
+      margin-bottom: 15px;
+    }
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    button {
+      background-color: #f06292;
+      color: white;
+      border: 2px solid #2d2d2d;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.2s;
+      box-shadow: 2px 3px 0px #2d2d2d;
+    }
+    button:hover {
+      background-color: #ec407a;
+      transform: translateY(-2px);
+    }
+    button:active {
+      transform: translateY(1px);
+      box-shadow: 0px 0px 0px #2d2d2d;
+    }
+    button:disabled {
+      background-color: #ce93d8;
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .flavor-btn {
+      margin: 8px 0;
+      width: 100%;
+      text-align: left;
+    }
+    .feedback {
+      margin-top: 12px;
+      font-weight: bold;
+      text-align: center;
+      min-height: 22px;
+    }
+    .next-btn {
+      width: 100%;
+      background-color: #ab47bc;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="game-card">
+  <h1>🎂 MasterChef Gramatical 🎂</h1>
+  
+  <!-- Selección de Dificultad/Sabor -->
+  <div id="flavor-selection">
+    <h3 style="text-align: center;">Selecciona la receta de tu pastel:</h3>
+    <button class="flavor-btn" onclick="startGame('strawberry')">🍓 <b>Pastel de Fresa & Vainilla (Fácil)</b> - Preguntas de repaso básico.</button>
+    <button class="flavor-btn" onclick="startGame('chocolate')">🍫 <b>Pastel de Chocolate Negro (Intermedio)</b> - Retos estándar del sustantivo.</button>
+    <button class="flavor-btn" onclick="startGame('lemon')">🍋 <b>Pastel Gourmet de Limón (Difícil)</b> - Trampas y excepciones gramaticales.</button>
+  </div>
+
+  <!-- Pantalla Principal del Juego -->
+  <div id="game-stage" style="display: none;">
+    <div class="score-board">
+      Puntuación: <span id="score">0</span> pts | Receta: <span id="flavor-label"></span>
+    </div>
+
+    <div class="main-stage">
+      <!-- DIBUJO DEL PASTEL ESTILO ILUSTRACIÓN -->
+      <div class="bakery-zone">
+        <div class="cake-container">
+          <div class="plate-base"></div>
+          
+          <!-- Cuerpo del pastel -->
+          <div class="cake-body" id="cake-body">
+            <!-- SVG de Cobertura chorreando (Drips) -->
+            <svg class="cake-drip" id="cake-drip" viewBox="0 0 180 45" preserveAspectRatio="none">
+              <path id="drip-path" d="M 0,0 L 180,0 L 180,15 C 165,15 160,35 145,35 C 130,35 125,10 110,10 C 95,10 90,40 70,40 C 50,40 45,15 30,15 C 15,15 10,25 0,25 Z" stroke="#2d2d2d" stroke-width="3.5" />
+            </svg>
+          </div>
+
+          <!-- Tapa elíptica superior -->
+          <div class="cake-top" id="cake-top"></div>
+
+          <!-- Fresa decorativa -->
+          <svg class="strawberry-topping" id="strawberry" viewBox="0 0 60 60">
+            <!-- Hojas -->
+            <path d="M 15 20 C 10 5, 25 10, 25 18 C 30 5, 45 10, 35 20 C 45 20, 40 30, 30 22" fill="#66bb6a" stroke="#2d2d2d" stroke-width="2.5" />
+            <!-- Cuerpo fresa -->
+            <path d="M 15 20 C 10 35, 20 50, 30 52 C 40 50, 50 35, 45 20 Z" fill="#ef5350" stroke="#2d2d2d" stroke-width="3" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Área de Preguntas -->
+      <div class="question-zone">
+        <div class="station-title" id="station-name">Estación</div>
+        <div class="question" id="question-text"></div>
+        <div class="options-grid" id="options-container"></div>
+        <div class="feedback" id="feedback-text"></div>
+        <button class="next-btn" id="next-btn" style="display: none;" onclick="nextQuestion()">Siguiente Paso ➔</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const colors = {
+    strawberry: { base: "#fbe9e7", top: "#ff80ab", drip: "#ff4081", name: "Fresa & Vainilla" },
+    chocolate:  { base: "#d7ccc8", top: "#5d4037", drip: "#3e2723", name: "Chocolate Negro" },
+    lemon:      { base: "#fff9c4", top: "#ffee58", drip: "#fdd835", name: "Limón Gourmet" }
+  };
+
+  const bank = {
+    strawberry: [
+      { station: "Paso 1: Mezclar la Base", q: "¿Qué categoría gramatical nombra personas, animales, cosas o lugares?", opts: ["El Sustantivo", "El Verbo", "El Adjetivo"], correct: 0 },
+      { station: "Paso 2: Relleno Frutal", q: "¿Cuál es el sustantivo colectivo que corresponde a 'naranjo'?", opts: ["Arboleda", "Naranjal", "Piara"], correct: 1 },
+      { station: "Paso 3: Segunda Capa", q: "¿Cuál es el plural correcto de la palabra 'verdad'?", opts: ["Verdades", "Verdads", "Las verdad"], correct: 0 },
+      { station: "Paso 4: Vertiendo la Cobertura", q: "¿El sustantivo 'botella' pertenece al género masculino o femenino?", opts: ["Masculino (El)", "Femenino (La)"], correct: 1 },
+      { station: "Paso 5: Adorno Final", q: "Si el 'almendro' es el árbol, ¿qué es la 'almendra'?", opts: ["El fruto comestible", "La flor", "La rama"], correct: 0 }
+    ],
+    chocolate: [
+      { station: "Paso 1: Mezclar la Base", q: "En un sustantivo epiceno como 'la jirafa', ¿cómo indicas el sexo?", opts: ["Cambiando el artículo", "Añadiendo 'macho' o 'hembra'", "Modificando la palabra"], correct: 1 },
+      { station: "Paso 2: Relleno Frutal", q: "¿Cuál es el grupo o conjunto de 'cerdos'?", opts: ["Rebaño", "Jauría", "Piara"], correct: 2 },
+      { station: "Paso 3: Segunda Capa", q: "¿Cuál es el plural correcto de 'bisectriz'?", opts: ["Bisectrices", "Bisectrizs", "Bisectrizi"], correct: 0 },
+      { station: "Paso 4: Vertiendo la Cobertura", q: "¿Cuál de estos sustantivos es MASCULINO?", opts: ["Canción", "Drama", "Codorniz"], correct: 1 },
+      { station: "Paso 5: Adorno Final", q: "Cambio de significado: Si 'el rodillo' es el objeto para amasar, ¿qué es 'la rodilla'?", opts: ["Una masa", "Una articulación del cuerpo", "Una herramienta pequeña"], correct: 1 }
+    ],
+    lemon: [
+      { station: "Paso 1: Mezclar la Base", q: "Decimos 'el aula' en lugar de 'la aula' para evitar cacofonía, pero su género es:", opts: ["Masculino", "Femenino", "Neutro"], correct: 1 },
+      { station: "Paso 2: Relleno Frutal", q: "¿Cuáles son los colectivos de 'monte' y 'álamo'?", opts: ["Cordillera y Alameda", "Bosque y Rosaleda", "Sierra y Aulario"], correct: 0 },
+      { station: "Paso 3: Segunda Capa", q: "¿Cuál es el grupo de plurales correcto para 'no', 'esquí' y 'crisis'?", opts: ["Noes, esquíes, crisis", "Nos, esquís, crisises", "No, esquí, crisis"], correct: 0 },
+      { station: "Paso 4: Vertiendo la Cobertura", q: "¿Qué opción contiene solo sustantivos FEMENINOS?", opts: ["Leyenda, canción, botella", "Drama, violín, arpón", "Fiscal, alcohol, perfume"], correct: 0 },
+      { station: "Paso 5: Adorno Final", q: "Diferencia de significado: ¿Qué diferencia hay entre 'charco' y 'charca'?", opts: ["La charca es un depósito de agua más grande", "El charco es de agua salada", "No hay diferencia"], correct: 0 }
+    ]
+  };
+
+  let questions = [];
+  let currentStep = 0;
+  let score = 0;
+  let selectedFlavor = '';
+
+  function startGame(flavor) {
+    selectedFlavor = flavor;
+    questions = bank[flavor];
+    
+    document.getElementById("flavor-selection").style.display = "none";
+    document.getElementById("game-stage").style.display = "block";
+    document.getElementById("flavor-label").innerText = colors[flavor].name;
+
+    // Configurar colores de la torta según el sabor
+    document.getElementById("cake-body").style.backgroundColor = colors[flavor].base;
+    document.getElementById("cake-top").style.backgroundColor = colors[flavor].top;
+    document.getElementById("drip-path").setAttribute("fill", colors[flavor].drip);
+
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    const q = questions[currentStep];
+    document.getElementById("station-name").innerText = q.station;
+    document.getElementById("question-text").innerText = q.q;
+    document.getElementById("feedback-text").innerText = "";
+    document.getElementById("next-btn").style.display = "none";
+
+    const container = document.getElementById("options-container");
+    container.innerHTML = "";
+
+    q.opts.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.innerText = opt;
+      btn.onclick = () => check(idx, q.correct);
+      container.appendChild(btn);
+    });
+  }
+
+  function check(selected, correct) {
+    const btns = document.getElementById("options-container").getElementsByTagName("button");
+    for (let b of btns) b.disabled = true;
+
+    const feedback = document.getElementById("feedback-text");
+
+    if (selected === correct) {
+      score += 100;
+      feedback.style.color = "#2e7d32";
+      feedback.innerText = "¡Excelente! Construyendo la torta...";
+      document.getElementById("score").innerText = score;
+
+      // Animar crecimiento visual del pastel según el paso
+      const body = document.getElementById("cake-body");
+      const drip = document.getElementById("cake-drip");
+      const top = document.getElementById("cake-top");
+      const strawberry = document.getElementById("strawberry");
+
+      if (currentStep === 0) {
+        body.style.height = "60px";
+        body.style.borderWidth = "3.5px";
+      } else if (currentStep === 1) {
+        body.style.height = "100px";
+      } else if (currentStep === 2) {
+        body.style.height = "130px";
+      } else if (currentStep === 3) {
+        drip.style.opacity = "1";
+        top.style.opacity = "1";
+      } else if (currentStep === 4) {
+        strawberry.style.opacity = "1";
+        strawberry.style.transform = "scale(1)";
+      }
+
+    } else {
+      feedback.style.color = "#c62828";
+      feedback.innerText = "¡Error en la receta! No se pudo armar esta capa.";
+    }
+
+    document.getElementById("next-btn").style.display = "block";
+  }
+
+  function nextQuestion() {
+    currentStep++;
+    if (currentStep < questions.length) {
+      loadQuestion();
+    } else {
+      showEnding();
+    }
+  }
+
+  function showEnding() {
+    document.getElementById("game-stage").innerHTML = `
+      <h2 style="text-align: center; color: #ad1457;">¡Torta Completa! 🍓🎂</h2>
+      <p style="text-align: center; font-size: 1.1rem;">Has logrado preparar tu pastel con <b>${score} puntos</b> de precisión gramatical.</p>
+      <button onclick="location.reload()" style="width: 100%; margin-top: 15px;">🔄 Preparar otro pastel</button>
+    `;
+  }
+</script>
+
+</body>
+</html>
